@@ -21,5 +21,5 @@ After running it, a .pdf file is generated, use "ctrl + s" to save it.
 
 Here is an example of what is generated:
 
-![alt tag](example_chevron.jpg)
+![alt tag](example.jpg)
 
