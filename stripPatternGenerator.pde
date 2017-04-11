@@ -1,20 +1,22 @@
 import processing.pdf.*;
 
-// zig-zag count, height and vertical spacing factor between strips
-int count = 40;
-int size = 20;
-float factor = 3;
+int count = 54;   // zig-zag count (how many segments on the X axis)
+int size = 20;    // zig-zag height 
+float factor = 2; // zig-zag vertical spacing factor between strips
 
 
 void setup() {
+  
   size(600, 600);
   background(255);
-
+  strokeWeight(3);
+  strokeJoin(ROUND);
   noLoop();
   beginRecord(PDF, "export.pdf");
 }
 
 void draw() {
+
   // starting point
   int startPosX = 0;
   int startPosY = size;
@@ -24,14 +26,10 @@ void draw() {
   int endPosY = size; // height
 
   for (int i = 0; i<height/size - 1; i++) {
-    drawZigZag(count, size,
-      startPosX, startPosY + size * i * factor,
-      endPosX, endPosY   + size * i * factor);
+    drawZigZag(count, size, startPosX, startPosY + size * i * factor, endPosX, endPosY + size * i * factor);
   }
-
   endRecord(); // PDF generation
 }
-
 
 void drawZigZag(int segments, float radius, float aX, float aY, float bX, float bY) {
 
