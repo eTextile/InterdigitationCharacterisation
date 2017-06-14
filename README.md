@@ -13,7 +13,7 @@ You can edit the 1st variables to get your custom patterns.
 After running it, a .pdf file is generated, use "ctrl + s" to save it.
 Here is an example of what is generated:
 
-![alt tag](example.jpg)
+![alt tag](export.jpg)
 
 ## TODO
  - Add total X and Y size parameter
