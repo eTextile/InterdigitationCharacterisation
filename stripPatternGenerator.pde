@@ -12,40 +12,41 @@ int globalMax = 11561; // XXX TODO FIXME
 
 void setup() {
   colorMode(HSB, colorRef);
-  size(330, 600);
+  size(600, 330);
 }
 
 void draw() {
   // starting point
-  int startPosX = -size;
-  int startPosY = size*2;
+  int startPosX = size*2;
+  int startPosY = -size;
 
   // end point of the line
-  int endPosX = width+size;
-  int endPosY = size*2; // height
+  int endPosX = size*2; // width
+  int endPosY = height+size;
 
   background(colorRef);
   strokeJoin(MITER);
 
-  for (int i = 0; i<height/size - 1; i++) {
+  for (int i = 0; i<width/size - 1; i++) {
     strokeWeight(STROKE);
     stroke(i*(colorRef/7) % colorRef, // Hue
            colorRef,                  // Saturation
            colorRef,                  // Brightness
            colorRef-1);               // alpha = to mark common colors
     drawZigZag(count,     size,
-               startPosX, startPosY + size * i * factor,
-               endPosX,   endPosY   + size * i * factor);
+               startPosX + size * i * factor, startPosY,
+               endPosX   + size * i * factor,   endPosY);
   }
 
   // draw finger:
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);
-  ellipse(width/2, -fingerSize/2+fingerOffset, fingerSize, fingerSize);
+  ellipse(-fingerSize/2+fingerOffset, height/2, fingerSize, fingerSize);
 
-  if (fingerOffset < height+fingerSize)
+  if (fingerOffset < width+fingerSize)
     fingerOffset += speed;
-//  else
+  else
+    fingerOffset = 0;
 //    noLoop();
 
   histogram();
@@ -69,8 +70,8 @@ void histogram() {
     }
   }
 
- // XXX TODO FIXME
- int noise[] = {0, 9, 20, 29, 40, 49, 60};
+  // XXX TODO FIXME
+  int noise[] = {0, 9, 20, 29, 40, 49, 60};
   for (int i = 0; i < noise.length; i++)
     hist[noise[i]] = 0;
 
