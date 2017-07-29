@@ -3,6 +3,8 @@ int size = 35;    // zig-zag height
 int STROKE = 45;
 float factor = 2.2; // zig-zag vertical spacing factor between strips
 
+int fingerSize = size * 5;
+int fingerOffset = 0;
 
 
 void setup() {
@@ -25,6 +27,13 @@ void draw() {
                startPosX, startPosY + size * i * factor,
                endPosX,   endPosY   + size * i * factor);
   }
+
+  // draw finger:
+  strokeWeight(0);
+  fill(0, 0, colorRef, colorRef/2);
+  ellipse(width/2, -fingerSize/2+fingerOffset, fingerSize, fingerSize);
+
+  fingerOffset = (fingerOffset < height+fingerSize)? fingerOffset+5 : 0;
 }
 
 void drawZigZag(int segments, float radius, float aX, float aY, float bX, float bY) {
