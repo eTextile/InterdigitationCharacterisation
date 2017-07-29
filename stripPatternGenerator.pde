@@ -6,14 +6,14 @@ float factor = 2.2; // zig-zag vertical spacing factor between strips
 int fingerSize = size * 5;
 int fingerOffset = 0;
 
+int colorRef = 70;
 
 void setup() {
+  colorMode(HSB, colorRef);
   size(330, 600);
 }
 
 void draw() {
-  background(0);
-
   // starting point
   int startPosX = -size;
   int startPosY = size*2;
@@ -22,7 +22,9 @@ void draw() {
   int endPosX = width+size;
   int endPosY = size*2; // height
 
+  background(colorRef);
   for (int i = 0; i<height/size - 1; i++) {
+    stroke(i*10, colorRef, colorRef);
     drawZigZag(count,     size,
                startPosX, startPosY + size * i * factor,
                endPosX,   endPosY   + size * i * factor);
