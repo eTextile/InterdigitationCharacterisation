@@ -5,7 +5,7 @@ float factor = 2.2; // zig-zag vertical spacing factor between strips
 
 int fingerSize = size * 5;
 int fingerOffset = 0;
-int speed = 3;
+int speed = 8;
 
 int colorRef = 70;
 int globalMax = 11561; // XXX TODO FIXME
@@ -43,9 +43,14 @@ void draw() {
   fill(0, 0, colorRef, 2*colorRef/3);
   ellipse(width/2, -fingerSize/2+fingerOffset, fingerSize, fingerSize);
 
-  fingerOffset = (fingerOffset < height+fingerSize)? fingerOffset+speed : 0;
+  if (fingerOffset < height+fingerSize)
+    fingerOffset += speed;
+//  else
+//    noLoop();
 
   histogram();
+
+//  saveFrame("gif/line-##.png");
 }
 
 void histogram() {
@@ -64,6 +69,7 @@ void histogram() {
     }
   }
 
+ // XXX TODO FIXME
  int noise[] = {0, 9, 20, 29, 40, 49, 60};
   for (int i = 0; i < noise.length; i++)
     hist[noise[i]] = 0;
