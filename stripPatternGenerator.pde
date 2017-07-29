@@ -5,8 +5,10 @@ float factor = 2.2; // zig-zag vertical spacing factor between strips
 
 int fingerSize = size * 5;
 int fingerOffset = 0;
+int speed = 3;
 
 int colorRef = 70;
+int globalMax = 11561; // XXX TODO FIXME
 
 void setup() {
   colorMode(HSB, colorRef);
@@ -27,7 +29,10 @@ void draw() {
 
   for (int i = 0; i<height/size - 1; i++) {
     strokeWeight(STROKE);
-    stroke(i*10, colorRef, colorRef);
+    stroke(i*(colorRef/7) % colorRef, // Hue
+           colorRef,                  // Saturation
+           colorRef,                  // Brightness
+           colorRef-1);               // alpha = to mark common colors
     drawZigZag(count,     size,
                startPosX, startPosY + size * i * factor,
                endPosX,   endPosY   + size * i * factor);
@@ -35,10 +40,54 @@ void draw() {
 
   // draw finger:
   strokeWeight(0);
-  fill(0, 0, colorRef, colorRef/2);
+  fill(0, 0, colorRef, 2*colorRef/3);
   ellipse(width/2, -fingerSize/2+fingerOffset, fingerSize, fingerSize);
 
-  fingerOffset = (fingerOffset < height+fingerSize)? fingerOffset+5 : 0;
+  fingerOffset = (fingerOffset < height+fingerSize)? fingerOffset+speed : 0;
+
+  histogram();
+}
+
+void histogram() {
+  int[] hist = new int[colorRef];
+  // Calculate the histogram
+  for (int i = 0; i < width; i++) {
+    for (int j = 0; j < height; j++) {
+      int hue = int(hue(get(i, j)));
+
+      // XXX TODO FIXME !!!
+      if ( get(i, j) != color(0)        ||         // remove white
+           get(i, j) != color(colorRef) ||         // remove black
+           int(alpha(get(i, j))) != colorRef-1 ) { // remove common colors marked above
+        hist[hue]++;
+      }
+    }
+  }
+
+ int noise[] = {0, 9, 20, 29, 40, 49, 60};
+  for (int i = 0; i < noise.length; i++)
+    hist[noise[i]] = 0;
+
+  // Find the largest value in the histogram
+  int histMax = max(hist);
+  globalMax = max(histMax, globalMax);
+  //println(globalMax);
+
+  // Draw the histogram
+  for (int i = 0; i < width; i ++) {
+    // Map i (from 0..width) to a location in the histogram (0..colorRef)
+    int which = int(map(i, 0, width, 0, colorRef));
+    //println(which, hist[which]);
+
+    // Convert the histogram value to a location between
+    // the bottom and the top of the picture
+    int y = int(map(hist[which],
+                    0, globalMax,
+                    height, 0));
+    stroke(0);
+    strokeWeight(5);
+    line(i, height, i, y);
+  }
 }
 
 void drawZigZag(int segments, float radius, float aX, float aY, float bX, float bY) {
