@@ -23,7 +23,10 @@ void draw() {
   int endPosY = size*2; // height
 
   background(colorRef);
+  strokeJoin(MITER);
+
   for (int i = 0; i<height/size - 1; i++) {
+    strokeWeight(STROKE);
     stroke(i*10, colorRef, colorRef);
     drawZigZag(count,     size,
                startPosX, startPosY + size * i * factor,
@@ -56,21 +59,22 @@ void drawZigZag(int segments, float radius, float aX, float aY, float bX, float 
   float normalY = segmentX / segmentLength * radius;
 
   // Calculate start position of the zig-zag line
-  float oldX = aX + normalX;
-  float oldY = aY + normalY;
+  float StartX = aX + normalX;
+  float StartY = aY + normalY;
+
+  beginShape();
+  vertex(StartX, StartY);
 
   // Render the zig-zag line
   for (int n = 1; n < segments; n++) {
     float newX = aX + n * segmentX + ((n & 1) == 0 ? normalX : -normalX);
     float newY = aY + n * segmentY + ((n & 1) == 0 ? normalY : -normalY);
-    strokeJoin(ROUND);
-    strokeWeight(STROKE);
-    stroke(255);
-    line(oldX, oldY, newX, newY);
-    oldX = newX;
-    oldY = newY;
+    vertex(newX, newY);
   }
 
   // Render last line
-  line(oldX, oldY, bX + ((segments & 1) == 0 ? normalX : -normalX), bY + ((segments & 1) == 0 ? normalY : -normalY));
+  vertex(bX + ((segments & 1) == 0 ? normalX : -normalX),
+         bY + ((segments & 1) == 0 ? normalY : -normalY));
+  endShape();
 }
+
