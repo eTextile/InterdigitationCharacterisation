@@ -1,30 +1,29 @@
-// 
+int count = 6;   // zig-zag count (how many segments on the X axis)
+int size = 35;    // zig-zag height
+int STROKE = 45;
+float factor = 2.2; // zig-zag vertical spacing factor between strips
 
-
-int count = 54;   // zig-zag count (how many segments on the X axis)
-int size = 20;    // zig-zag height 
-int STROKE = 3;
-float factor = 2; // zig-zag vertical spacing factor between strips
 
 
 void setup() {
-
-  size(600, 600);
+  size(330, 600);
 }
 
 void draw() {
   background(0);
 
   // starting point
-  int startPosX = 0;
-  int startPosY = size;
+  int startPosX = -size;
+  int startPosY = size*2;
 
   // end point of the line
-  int endPosX = width;
-  int endPosY = size; // height
+  int endPosX = width+size;
+  int endPosY = size*2; // height
 
   for (int i = 0; i<height/size - 1; i++) {
-    drawZigZag(count, size, startPosX, startPosY + size * i * factor, endPosX, endPosY + size * i * factor);
+    drawZigZag(count,     size,
+               startPosX, startPosY + size * i * factor,
+               endPosX,   endPosY   + size * i * factor);
   }
 }
 
