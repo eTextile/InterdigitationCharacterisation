@@ -4,8 +4,6 @@ int STROKE = 45;
 float factor = 2.2; // zig-zag vertical spacing factor between strips
 
 int fingerSize = size * 5;
-int fingerOffset = 0;
-int speed = 8;
 
 int stripNumber = 7;
 int colorRef = stripNumber * 10;
@@ -43,13 +41,7 @@ void draw() {
   // draw finger:
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);
-  ellipse(-fingerSize/2+fingerOffset, height/2, fingerSize, fingerSize);
-
-  if (fingerOffset < width+fingerSize)
-    fingerOffset += speed;
-  else
-    fingerOffset = 0;
-//    noLoop();
+  ellipse(mouseX, height/2, fingerSize, fingerSize);
 
   histogram();
 
