@@ -7,7 +7,9 @@ int fingerSize = size * 5;
 int fingerOffset = 0;
 int speed = 8;
 
-int colorRef = 70;
+int stripNumber = 7;
+int colorRef = stripNumber * 10;
+
 int globalMax = 11561; // XXX TODO FIXME
 
 void setup() {
@@ -27,9 +29,9 @@ void draw() {
   background(colorRef);
   strokeJoin(MITER);
 
-  for (int i = 0; i<width/size - 1; i++) {
+  for (int i = 0; i<stripNumber; i++) {
     strokeWeight(STROKE);
-    stroke(i*(colorRef/7) % colorRef, // Hue
+    stroke(i*(colorRef/stripNumber) % colorRef, // Hue
            colorRef,                  // Saturation
            colorRef,                  // Brightness
            colorRef-1);               // alpha = to mark common colors
