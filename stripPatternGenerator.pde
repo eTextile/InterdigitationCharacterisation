@@ -9,6 +9,7 @@ int stripNumber = 7;
 int colorRef = stripNumber * 10;
 
 int globalMax = 0;
+color[] baseColors = new color[colorRef];
 
 void setup() {
   colorMode(HSB, colorRef);
@@ -30,10 +31,12 @@ void draw() {
 
   for (int i = 0; i<stripNumber; i++) {
     strokeWeight(STROKE);
-    stroke(i*(colorRef/stripNumber) % colorRef, // Hue
-           colorRef,                  // Saturation
-           colorRef,                  // Brightness
-           colorRef-1);               // alpha = to mark common colors
+
+    // Hue, Saturation, Brightness, Alpha
+    baseColors[i] = color(i*(colorRef/stripNumber) % colorRef,
+                          colorRef, colorRef, colorRef);
+
+    stroke(baseColors[i]);
     drawZigZag(count,     size,
                startPosX + size * i * factor, startPosY,
                endPosX   + size * i * factor,   endPosY);
@@ -50,16 +53,31 @@ void draw() {
 }
 
 /////////////////////////////////////////////////////////////////
+boolean isBaseColor(color c) {
+  // 1st, test white:
+  if (c == color(0, 0, colorRef)) {
+    return true;
+  }
+
+  // then test the strip colors:
+  for (int i = 0; i < baseColors.length; i++)
+    if (c == baseColors[i])
+      return true;
+
+  return false;
+}
+
+/////////////////////////////////////////////////////////////////
 void histogram() {
+
   int[] hist = new int[colorRef];
   // Calculate the histogram
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
       int hue = int(hue(get(i, j)));
 
-      if ( get(i, j) != color(0)        ||         // remove white
-           get(i, j) != color(colorRef) ||         // remove black
-           int(alpha(get(i, j))) != colorRef-1 ) { // remove common colors marked above
+      // Only focus on the "finger colors"
+      if ( !isBaseColor( get(i, j) ) ) {
         hist[hue]++;
       }
     }
