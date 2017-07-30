@@ -131,6 +131,14 @@ void drawZigZag(int segments, float radius, float aX, float aY, float bX, float 
   // Render last line
   vertex(bX + ((segments & 1) == 0 ? normalX : -normalX),
          bY + ((segments & 1) == 0 ? normalY : -normalY));
+
+  // roll back to close the shape
+  for (int n = segments-1; n >= 1; n--) {
+    float newX = aX + n * segmentX + ((n & 1) == 0 ? normalX : -normalX);
+    float newY = aY + n * segmentY + ((n & 1) == 0 ? normalY : -normalY);
+    vertex(newX, newY);
+  }
+
   endShape();
 }
 
