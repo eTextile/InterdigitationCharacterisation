@@ -15,6 +15,7 @@ void setup() {
   size(600, 330);
 }
 
+/////////////////////////////////////////////////////////////////
 void draw() {
   // starting point
   int startPosX = size*2;
@@ -48,6 +49,7 @@ void draw() {
 //  saveFrame("gif/line-##.png");
 }
 
+/////////////////////////////////////////////////////////////////
 void histogram() {
   int[] hist = new int[colorRef];
   // Calculate the histogram
@@ -94,6 +96,7 @@ void histogram() {
   }
 }
 
+/////////////////////////////////////////////////////////////////
 void drawZigZag(int segments, float radius, float aX, float aY, float bX, float bY) {
 
   // Calculate vector from start to end point
