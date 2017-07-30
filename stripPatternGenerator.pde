@@ -83,6 +83,11 @@ void histogram() {
     }
   }
 
+  for (int i = 0; i < hist.length; i++) {
+    if (hist[i] < 0.06*globalMax) { // 0.6%
+      hist[i] = 0;
+    }
+  }
 
   // Find the largest value in the histogram
   int histMax = max(hist);
