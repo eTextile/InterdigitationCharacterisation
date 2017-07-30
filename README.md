@@ -9,6 +9,8 @@ The etching tutorial can be found on the [DataPaulette eTextile hakerspace wiki]
 ## Note
 
 This branch is experimental, it is used to characterize the sensor.
+Here is an illustration of what is simulated:
+![alt tag](animation.gif)
 
 ## How?
 
