@@ -8,7 +8,7 @@ int fingerSize = size * 5;
 int stripNumber = 7;
 int colorRef = stripNumber * 10;
 
-int globalMax = 11561; // XXX TODO FIXME
+int globalMax = 0;
 
 void setup() {
   colorMode(HSB, colorRef);
@@ -57,7 +57,6 @@ void histogram() {
     for (int j = 0; j < height; j++) {
       int hue = int(hue(get(i, j)));
 
-      // XXX TODO FIXME !!!
       if ( get(i, j) != color(0)        ||         // remove white
            get(i, j) != color(colorRef) ||         // remove black
            int(alpha(get(i, j))) != colorRef-1 ) { // remove common colors marked above
@@ -66,24 +65,15 @@ void histogram() {
     }
   }
 
-  // XXX TODO FIXME
-  int noise[] = {0, 9, 20, 29, 40, 49, 60};
-  for (int i = 0; i < noise.length; i++)
-    hist[noise[i]] = 0;
 
   // Find the largest value in the histogram
   int histMax = max(hist);
   globalMax = max(histMax, globalMax);
-  //println(globalMax);
 
   // Draw the histogram
-  for (int i = 0; i < width; i ++) {
+  for (int i = 0; i < width; i++) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
     int which = int(map(i, 0, width, 0, colorRef));
-
-    // remove more noise XXX TODO FIXME
-    if (hist[which] < 399)
-      hist[which] = 0;
 
     // Convert the histogram value to a location between
     // the bottom and the top of the picture
