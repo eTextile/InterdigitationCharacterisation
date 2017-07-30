@@ -86,7 +86,10 @@ void histogram() {
   for (int i = 0; i < width; i ++) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
     int which = int(map(i, 0, width, 0, colorRef));
-    //println(which, hist[which]);
+
+    // remove more noise XXX TODO FIXME
+    if (hist[which] < 399)
+      hist[which] = 0;
 
     // Convert the histogram value to a location between
     // the bottom and the top of the picture
