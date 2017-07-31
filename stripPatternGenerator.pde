@@ -11,9 +11,15 @@ int colorRef = stripNumber * 10;
 int globalMax = 0;
 color[] baseColors = new color[colorRef];
 
+/////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
   size(600, 330);
+
+  // run the histogram once to initialize globalMax
+  drawBackground();
+  drawFinger(width/2);
+  histogram();
 }
 
 /////////////////////////////////////////////////////////////////
