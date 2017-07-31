@@ -22,9 +22,7 @@ void draw() {
   drawBackground();
 
   // draw finger:
-  strokeWeight(0);
-  fill(0, 0, colorRef, 2*colorRef/3);
-  ellipse(mouseX, height/2, fingerSize, fingerSize);
+  drawFinger(mouseX);
 
   histogram();
 
@@ -86,6 +84,13 @@ void histogram() {
     strokeWeight(5);
     line(i, height, i, y);
   }
+}
+
+/////////////////////////////////////////////////////////////////
+void drawFinger(int position) {
+  strokeWeight(0);
+  fill(0, 0, colorRef, 2*colorRef/3);
+  ellipse(position, height/2, fingerSize, fingerSize);
 }
 
 /////////////////////////////////////////////////////////////////
