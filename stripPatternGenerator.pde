@@ -1,9 +1,16 @@
-int zzSpikeCount = 6;          // zig-zag count (how many segments on the X axis)
+// This program draws virtual pressure sensing strips with interdigitated
+// shapes (zig zags for now), and a virtual finger that swipes it.
+// To identify each strip, it uses different colors, and to simulate the
+// effect of a finger on it, an alpha value is used.
+
+int zzSpikeCount = 6;          // zig-zag count
 int zzTotalWidth = 35;         // zig-zag width
 int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
+
+// The following global variables should not need to be modified
 
 int stripNumber = 7;
 int colorRef = stripNumber * 10;
@@ -24,7 +31,7 @@ void setup() {
 
 /////////////////////////////////////////////////////////////////
 void draw() {
-  // draw zigzags
+  // draw strips
   drawBackground();
 
   // draw finger:
@@ -50,6 +57,8 @@ boolean isBaseColor(color c) {
 
 /////////////////////////////////////////////////////////////////
 void histogram() {
+  // This function measures the effect of a finger on a strip.
+  // It counts the pixels with a color that changed.
 
   int[] hist = new int[colorRef];
   // Calculate the histogram
@@ -65,7 +74,7 @@ void histogram() {
   }
 
   for (int i = 0; i < hist.length; i++) {
-    if (hist[i] < 0.06*globalMax) { // 0.6%
+    if (hist[i] < 0.06*globalMax) { // 0.6% is considered noise
       hist[i] = 0;
     }
   }
@@ -92,6 +101,9 @@ void histogram() {
 
 /////////////////////////////////////////////////////////////////
 void drawFinger(int position) {
+  // This functions assumes that the pressure applied by a finger
+  // is similar to a disc, later it will use a different model
+  // such as half a sphere, flattened or not.
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);
   ellipse(position, height/2, fingerSize, fingerSize);
@@ -99,6 +111,9 @@ void drawFinger(int position) {
 
 /////////////////////////////////////////////////////////////////
 void drawBackground() {
+  // This function draws the strips, here they have a zigzag
+  // shape but a picture could be loaded with random shapes
+
   // starting point
   int startPosX = zzTotalWidth*2;
   int startPosY = -zzTotalWidth;
