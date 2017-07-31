@@ -1,5 +1,5 @@
 int count = 6;   // zig-zag count (how many segments on the X axis)
-int size = 35;    // zig-zag height
+int size = 35;    // zig-zag width
 int STROKE = 45;
 float factor = 2.2; // zig-zag vertical spacing factor between strips
 
@@ -18,29 +18,8 @@ void setup() {
 
 /////////////////////////////////////////////////////////////////
 void draw() {
-  // starting point
-  int startPosX = size*2;
-  int startPosY = -size;
-
-  // end point of the line
-  int endPosX = size*2; // width
-  int endPosY = height+size;
-
-  background(colorRef);
-  strokeJoin(MITER);
-
-  for (int i = 0; i<stripNumber; i++) {
-    strokeWeight(STROKE);
-
-    // Hue, Saturation, Brightness, Alpha
-    baseColors[i] = color(i*(colorRef/stripNumber) % colorRef,
-                          colorRef, colorRef, colorRef);
-
-    stroke(baseColors[i]);
-    drawZigZag(count,     size,
-               startPosX + size * i * factor, startPosY,
-               endPosX   + size * i * factor,   endPosY);
-  }
+  // draw zigzags
+  drawBackground();
 
   // draw finger:
   strokeWeight(0);
@@ -106,6 +85,33 @@ void histogram() {
     stroke(0);
     strokeWeight(5);
     line(i, height, i, y);
+  }
+}
+
+/////////////////////////////////////////////////////////////////
+void drawBackground() {
+  // starting point
+  int startPosX = size*2;
+  int startPosY = -size;
+
+  // end point of the line
+  int endPosX = size*2; // width
+  int endPosY = height+size;
+
+  background(colorRef);
+  strokeJoin(MITER);
+
+  for (int i = 0; i<stripNumber; i++) {
+    strokeWeight(STROKE);
+
+    // Hue, Saturation, Brightness, Alpha
+    baseColors[i] = color(i*(colorRef/stripNumber) % colorRef,
+                          colorRef, colorRef, colorRef);
+
+    stroke(baseColors[i]);
+    drawZigZag(count,     size,
+               startPosX + size * i * factor, startPosY,
+               endPosX   + size * i * factor,   endPosY);
   }
 }
 
