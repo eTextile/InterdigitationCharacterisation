@@ -41,21 +41,6 @@ void draw() {
 }
 
 /////////////////////////////////////////////////////////////////
-boolean isBaseColor(color c) {
-  // 1st, test white:
-  if (c == color(0, 0, colorRef)) {
-    return true;
-  }
-
-  // then test the strip colors:
-  for (int i = 0; i < baseColors.length; i++)
-    if (c == baseColors[i])
-      return true;
-
-  return false;
-}
-
-/////////////////////////////////////////////////////////////////
 void histogram() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
@@ -97,6 +82,24 @@ void histogram() {
     strokeWeight(5);
     line(i, height, i, y);
   }
+}
+
+/////////////////////////////////////////////////////////////////
+boolean isBaseColor(color c) {
+  // This function looks for the most common colors, those that
+  // we don't want to see in our histogram.
+
+  // 1st, test white:
+  if (c == color(0, 0, colorRef)) {
+    return true;
+  }
+
+  // then test the strip colors:
+  for (int i = 0; i < baseColors.length; i++)
+    if (c == baseColors[i])
+      return true;
+
+  return false;
 }
 
 /////////////////////////////////////////////////////////////////
