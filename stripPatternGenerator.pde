@@ -49,40 +49,42 @@ void histogram() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
 
-  int[] hist = new int[colorRef];
+  int[] rawData = new int[colorRef];
   // Calculate the histogram
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
       // Only focus on the "finger colors"
       if ( !isBaseColor( get(i, j) ) ) {
         int hue = int(hue(get(i, j)));
-        hist[hue]++;
+        rawData[hue]++;
       }
     }
   }
 
-  PImage pressures = createImage(stripNumber, 1, ALPHA);
+  // Create an array only for the simulated pressure sensor data
+  PImage niceData = createImage(stripNumber, 1, ALPHA);
 
-  pressures = preprocess(hist, pressures);
+  // Extract from histogram, normalize, and interpolate
+  preprocess(rawData, niceData);
 
-  interpolatedHistogram(hist, pressures);
-
-  classicHistogram(hist);
+  // Visualizations
+  interpolatedHistogram(niceData); // increased resolution
+  classicHistogram(rawData);       // simulated raw sensor data
 }
 
 /////////////////////////////////////////////////////////////////
-PImage preprocess(int[] hist, PImage pressures) {
+void preprocess(int[] rawData, PImage niceData) {
   // Find the largest value in the histogram
-  int histMax = max(hist);
+  int histMax = max(rawData);
   globalMax = max(histMax, globalMax);
 
   // Pressure positions counter
   int indexCpt = 0;
 
   // Remove irrelevant values
-  for (int i = 0; i < hist.length; i++) {
-    if (hist[i] < 0.06*globalMax) { // 0.6% is considered noise
-      hist[i] = 0;
+  for (int i = 0; i < rawData.length; i++) {
+    if (rawData[i] < 0.06*globalMax) { // 0.6% is considered noise
+      rawData[i] = 0;
     } else {
       //  Trick to initialize this array only once:
       if (pressureIndices[pressureIndices.length-1] == 0) {
@@ -93,38 +95,37 @@ PImage preprocess(int[] hist, PImage pressures) {
   }
 
   // Extract pressure sensor data, normalize, and interpolate (using image functions):
-  pressures.loadPixels();
+  niceData.loadPixels();
   for (int i = 0; i < stripNumber; i++) {
     // populate the 1 dimensional image with normalized value
-    int level = colorRef * hist[pressureIndices[i]] / globalMax;
-    pressures.pixels[i] = color(level);
+    int level = colorRef * rawData[pressureIndices[i]] / globalMax;
+    niceData.pixels[i] = color(level);
   }
-  pressures.updatePixels();
+  niceData.updatePixels();
 
-  pressures.resize(colorRef, 1); // interpolation
-  return pressures;
+  niceData.resize(colorRef, 1); // interpolation
 }
 
 /////////////////////////////////////////////////////////////////
-void interpolatedHistogram(int[] hist, PImage pressures) {
-  pressures.loadPixels();
+void interpolatedHistogram(PImage niceData) {
+  niceData.loadPixels();
   // Draw the interpolated histogram
   for (int i = 0; i < width; i+=8) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
-    int which = int(map(i, 0, width, 0, pressures.pixels.length));
+    int which = int(map(i, 0, width, 0, niceData.pixels.length));
 
     // Convert the histogram value to a location between
     // the bottom and the top of the picture
-    int y = int(map(brightness(pressures.pixels[which]), 0, colorRef, height, 0));
+    int y = int(map(brightness(niceData.pixels[which]), 0, colorRef, height, 0));
     stroke(0);
     strokeWeight(2);
     line(i, height, i, y);
   }
-  pressures.updatePixels();
+  niceData.updatePixels();
 }
 
 /////////////////////////////////////////////////////////////////
-void classicHistogram(int[] hist) {
+void classicHistogram(int[] rawData) {
   // Draw the histogram
   for (int i = 0; i < width; i++) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
@@ -132,7 +133,7 @@ void classicHistogram(int[] hist) {
 
     // Convert the histogram value to a location between
     // the bottom and the top of the picture
-    int y = int(map(hist[which],
+    int y = int(map(rawData[which],
                     0, globalMax,
                     height, 0));
     stroke(0);
