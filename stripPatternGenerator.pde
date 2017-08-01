@@ -45,7 +45,6 @@ void draw() {
 }
 
 /////////////////////////////////////////////////////////////////
-// TODO split histogram() in several funcs.
 void histogram() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
@@ -62,6 +61,17 @@ void histogram() {
     }
   }
 
+  PImage pressures = createImage(stripNumber, 1, ALPHA);
+
+  pressures = preprocess(hist, pressures);
+
+  interpolatedHistogram(hist, pressures);
+
+  classicHistogram(hist);
+}
+
+/////////////////////////////////////////////////////////////////
+PImage preprocess(int[] hist, PImage pressures) {
   // Find the largest value in the histogram
   int histMax = max(hist);
   globalMax = max(histMax, globalMax);
@@ -82,18 +92,22 @@ void histogram() {
     }
   }
 
-
   // Extract pressure sensor data, normalize, and interpolate (using image functions):
-  PImage pressures = createImage(stripNumber, 1, ALPHA);
   pressures.loadPixels();
   for (int i = 0; i < stripNumber; i++) {
     // populate the 1 dimensional image with normalized value
     int level = colorRef * hist[pressureIndices[i]] / globalMax;
     pressures.pixels[i] = color(level);
   }
+  pressures.updatePixels();
 
   pressures.resize(colorRef, 1); // interpolation
+  return pressures;
+}
 
+/////////////////////////////////////////////////////////////////
+void interpolatedHistogram(int[] hist, PImage pressures) {
+  pressures.loadPixels();
   // Draw the interpolated histogram
   for (int i = 0; i < width; i+=8) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
@@ -107,8 +121,10 @@ void histogram() {
     line(i, height, i, y);
   }
   pressures.updatePixels();
+}
 
-
+/////////////////////////////////////////////////////////////////
+void classicHistogram(int[] hist) {
   // Draw the histogram
   for (int i = 0; i < width; i++) {
     // Map i (from 0..width) to a location in the histogram (0..colorRef)
