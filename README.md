@@ -12,6 +12,11 @@ This branch is experimental, it is used to characterize the sensor.
 Here is an illustration of what is simulated:
 ![alt tag](animation.gif)
 
+- The white circle is a simulated finger
+- The thick histogram lines represent simulated raw data from a virtual sensor
+- The thin histogram lines are an interpolation of this data
+- The grey circle is a retrieval attempt of the finger position from this data
+
 ## How?
 
 To run the .pde program, it just needs the [Processind IDE](https://processing.org/download/)
