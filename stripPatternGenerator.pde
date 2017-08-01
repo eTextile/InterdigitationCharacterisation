@@ -70,6 +70,7 @@ void histogram() {
 
   // Visualizations
   classicHistogram(rawData);       // simulated raw sensor data
+  interpolatedHistogram(niceData); // increased resolution
 }
 
 /////////////////////////////////////////////////////////////////
@@ -123,6 +124,24 @@ void classicHistogram(int[] rawData) {
     line(i, height, i, y);
   }
 
+}
+
+/////////////////////////////////////////////////////////////////
+void interpolatedHistogram(PImage niceData) {
+  niceData.loadPixels();
+  // Draw the interpolated histogram
+  for (int i = 0; i < width; i+=8) {
+    // Map i (from 0..width) to a location in the histogram (0..colorRef)
+    int which = int(map(i, 0, width, 0, niceData.pixels.length));
+
+    // Convert the histogram value to a location between
+    // the bottom and the top of the picture
+    int y = int(map(brightness(niceData.pixels[which]), 0, colorRef, height, 0));
+    stroke(0);
+    strokeWeight(2);
+    line(i, height, i, y);
+  }
+  niceData.updatePixels();
 }
 
 /////////////////////////////////////////////////////////////////
