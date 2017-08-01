@@ -38,8 +38,9 @@ void draw() {
   // draw strips
   drawBackground();
 
-  // draw finger:
-  drawFinger(mouseX);
+  // draw transparent finger:
+  color c = color(0, 0, colorRef, 2*colorRef/3);
+  drawFinger(mouseX, fingerSize, c);
 
   histogram();
 }
@@ -162,13 +163,13 @@ boolean isBaseColor(color c) {
 }
 
 /////////////////////////////////////////////////////////////////
-void drawFinger(int position) {
+void drawFinger(int position, int size, color c) {
   // This functions assumes that the pressure applied by a finger
   // is similar to a disc, later it will use a different model
   // such as half a sphere, flattened or not.
   strokeWeight(0);
-  fill(0, 0, colorRef, 2*colorRef/3);
-  ellipse(position, height/2, fingerSize, fingerSize);
+  fill(c);
+  ellipse(position, height/2, size, size);
 }
 
 /////////////////////////////////////////////////////////////////
