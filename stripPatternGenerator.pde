@@ -1,5 +1,5 @@
 // This program draws virtual pressure sensing strips with interdigitated
-// shapes (zig zags for now), and a virtual finger that swipes it.
+// shapes (zigzags for now), and a virtual finger that swipes it.
 // To identify each strip, it uses different colors, and to simulate the
 // effect of a finger on it, an alpha value is used.
 
@@ -18,6 +18,8 @@ int colorRef = stripNumber * 10;
 int globalMax = 0;
 color[] baseColors = new color[colorRef];
 
+int[] pressureIndices = new int[stripNumber];
+
 /////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
@@ -25,7 +27,9 @@ void setup() {
 
   // run the histogram once to initialize globalMax
   drawBackground();
-  drawFinger(width/2);
+  strokeWeight(0);
+  fill(0, 0, colorRef, 2*colorRef/3);   // finger color
+  rect(0, 0, width, fingerSize);        // simulate a wide finger
   histogram();
 }
 
@@ -41,6 +45,7 @@ void draw() {
 }
 
 /////////////////////////////////////////////////////////////////
+// TODO split histogram() in several funcs.
 void histogram() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
@@ -49,24 +54,60 @@ void histogram() {
   // Calculate the histogram
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
-      int hue = int(hue(get(i, j)));
-
       // Only focus on the "finger colors"
       if ( !isBaseColor( get(i, j) ) ) {
+        int hue = int(hue(get(i, j)));
         hist[hue]++;
       }
-    }
-  }
-
-  for (int i = 0; i < hist.length; i++) {
-    if (hist[i] < 0.06*globalMax) { // 0.6% is considered noise
-      hist[i] = 0;
     }
   }
 
   // Find the largest value in the histogram
   int histMax = max(hist);
   globalMax = max(histMax, globalMax);
+
+  // Pressure positions counter
+  int indexCpt = 0;
+
+  // Remove irrelevant values
+  for (int i = 0; i < hist.length; i++) {
+    if (hist[i] < 0.06*globalMax) { // 0.6% is considered noise
+      hist[i] = 0;
+    } else {
+      //  Trick to initialize this array only once:
+      if (pressureIndices[pressureIndices.length-1] == 0) {
+        // get the index of the useful values
+        pressureIndices[indexCpt++] = i;
+      }
+    }
+  }
+
+
+  // Extract pressure sensor data, normalize, and interpolate (using image functions):
+  PImage pressures = createImage(stripNumber, 1, ALPHA);
+  pressures.loadPixels();
+  for (int i = 0; i < stripNumber; i++) {
+    // populate the 1 dimensional image with normalized value
+    int level = colorRef * hist[pressureIndices[i]] / globalMax;
+    pressures.pixels[i] = color(level);
+  }
+
+  pressures.resize(colorRef, 1); // interpolation
+
+  // Draw the interpolated histogram
+  for (int i = 0; i < width; i+=8) {
+    // Map i (from 0..width) to a location in the histogram (0..colorRef)
+    int which = int(map(i, 0, width, 0, pressures.pixels.length));
+
+    // Convert the histogram value to a location between
+    // the bottom and the top of the picture
+    int y = int(map(brightness(pressures.pixels[which]), 0, colorRef, height, 0));
+    stroke(0);
+    strokeWeight(2);
+    line(i, height, i, y);
+  }
+  pressures.updatePixels();
+
 
   // Draw the histogram
   for (int i = 0; i < width; i++) {
@@ -82,6 +123,7 @@ void histogram() {
     strokeWeight(5);
     line(i, height, i, y);
   }
+
 }
 
 /////////////////////////////////////////////////////////////////
