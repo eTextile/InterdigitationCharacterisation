@@ -21,6 +21,8 @@ int globalMax = 0;
 color[] baseColors = new color[colorRef];
 
 int[] pressureIndices = new int[stripNumber];
+int fingerPos = fingerSize;
+int fingerStep = 6;
 
 /////////////////////////////////////////////////////////////////
 void setup() {
@@ -42,9 +44,18 @@ void draw() {
 
   // draw transparent finger:
   color c = color(0, 0, colorRef, 2*colorRef/3);
-  drawFinger(mouseX, fingerSize, c);
+
+  drawFinger(fingerPos, fingerSize, c);
+  if (fingerPos >= width - fingerSize) {
+    fingerStep *= -1;
+  }
+  fingerPos += fingerStep;
+
+  if (fingerPos < fingerSize)
+    noLoop();
 
   histogram();
+  saveFrame("gif/line-###.png");
 }
 
 /////////////////////////////////////////////////////////////////
