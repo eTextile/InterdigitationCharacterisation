@@ -2,6 +2,7 @@
 // shapes (zigzags for now), and a virtual finger that swipes it.
 // To identify each strip, it uses different colors, and to simulate the
 // effect of a finger on it, an alpha value is used.
+import blobDetection.*;
 
 int zzSpikeCount = 6;          // zig-zag count
 int zzTotalWidth = 35;         // zig-zag width
@@ -9,6 +10,7 @@ int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
+float blobThreshold = 0.75;
 
 // The following global variables should not need to be modified
 
@@ -71,6 +73,7 @@ void histogram() {
   // Visualizations
   classicHistogram(rawData);       // simulated raw sensor data
   interpolatedHistogram(niceData); // increased resolution
+  centroidView(niceData);          // retrieve finger position
 }
 
 /////////////////////////////////////////////////////////////////
@@ -142,6 +145,38 @@ void interpolatedHistogram(PImage niceData) {
     line(i, height, i, y);
   }
   niceData.updatePixels();
+}
+
+/////////////////////////////////////////////////////////////////
+void centroidView(PImage niceData) {
+  // This function aims to retrieve finger position
+
+  niceData.resize(colorRef, 3); // interpolation
+  niceData.loadPixels();
+
+  // The blob detection needs different lines around the real data
+  for (int i = 0; i < niceData.width; i++) {
+      niceData.pixels[i] = 0;                    // 1st line
+      niceData.pixels[i + 2*niceData.width] = 0; // 3rd line
+  }
+
+  BlobDetection blobDetect;
+  blobDetect = new BlobDetection(niceData.width, niceData.height);
+  blobDetect.setThreshold(blobThreshold);
+  blobDetect.setPosDiscrimination(false);
+  blobDetect.computeBlobs(niceData.pixels);
+
+  niceData.updatePixels();
+
+  if (blobDetect.getBlobNb() > 0) {
+    Blob b = blobDetect.getBlob(0); // there should only be one
+    if (b != null) {
+      // Draw finger at estimated position
+      color c = color(0, 0, 0, 2*colorRef/3);
+      drawFinger(int(b.x * width), fingerSize*4/5, c);
+    }
+  }
+
 }
 
 /////////////////////////////////////////////////////////////////
