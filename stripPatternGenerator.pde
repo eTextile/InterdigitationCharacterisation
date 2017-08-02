@@ -148,9 +148,10 @@ void interpolatedHistogram(PImage niceData) {
 }
 
 /////////////////////////////////////////////////////////////////
-void centroidView(PImage niceData) {
+int centroidView(PImage niceData) {
   // This function aims to retrieve finger position
 
+  int retrievedPos = -1;
   niceData.resize(colorRef, 3); // interpolation
   niceData.loadPixels();
 
@@ -172,11 +173,13 @@ void centroidView(PImage niceData) {
     Blob b = blobDetect.getBlob(0); // there should only be one
     if (b != null) {
       // Draw finger at estimated position
+      retrievedPos = int(b.x * width);
       color c = color(0, 0, 0, 2*colorRef/3);
-      drawFinger(int(b.x * width), fingerSize*4/5, c);
+      drawFinger(retrievedPos, fingerSize*4/5, c);
     }
   }
 
+  return retrievedPos;
 }
 
 /////////////////////////////////////////////////////////////////
