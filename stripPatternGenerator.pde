@@ -32,7 +32,7 @@ void setup() {
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);   // finger color
   rect(0, 0, width, fingerSize);        // simulate a wide finger
-  histogram();
+  histograms();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -44,11 +44,15 @@ void draw() {
   color c = color(0, 0, colorRef, 2*colorRef/3);
   drawFinger(mouseX, fingerSize, c);
 
-  histogram();
+  // analyse finger impact on sensor stripes and simulate raw sensor
+  PImage data = histograms();
+
+  // visualize the estimated finger position using raw sensor data
+  drawRetrievedFinger(data);
 }
 
 /////////////////////////////////////////////////////////////////
-void histogram() {
+PImage histograms() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
 
@@ -73,7 +77,8 @@ void histogram() {
   // Visualizations
   classicHistogram(rawData);       // simulated raw sensor data
   interpolatedHistogram(niceData); // increased resolution
-  centroidView(niceData);          // retrieve finger position
+
+  return niceData;
 }
 
 /////////////////////////////////////////////////////////////////
@@ -148,7 +153,7 @@ void interpolatedHistogram(PImage niceData) {
 }
 
 /////////////////////////////////////////////////////////////////
-int centroidView(PImage niceData) {
+int drawRetrievedFinger(PImage niceData) {
   // This function aims to retrieve finger position
 
   int retrievedPos = -1;
