@@ -83,6 +83,10 @@ void characterization(int fingerPos) {
            i,   height - errors[i]);
     }
 
+    // draw finger in the middle as reference:
+    color c = color(0, 0, colorRef, 2*colorRef/3);
+    drawFinger(width/2, fingerSize, c);
+
     String fileName = "characterization_count" + zzSpikeCount +"_width_" + zzTotalWidth + ".png";
     saveFrame(fileName); // TODO: write parameters value in file
 
