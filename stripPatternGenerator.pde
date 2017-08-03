@@ -4,13 +4,13 @@
 // effect of a finger on it, an alpha value is used.
 import blobDetection.*;
 
-int zzSpikeCount = 6;          // zig-zag count
+int zzSpikeCount = 5;          // zig-zag count
 int zzTotalWidth = 35;         // zig-zag width
 int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
-float blobThreshold = 0.75;
+float blobThreshold = 0.6;
 
 // The following global variables should not need to be modified
 
@@ -85,7 +85,7 @@ void characterization(int fingerPos) {
            i,   height - errors[i]);
     }
 
-    String fileName = "characterization.png";
+    String fileName = "characterization_count" + zzSpikeCount +"_width_" + zzTotalWidth + ".png";
     saveFrame(fileName); // TODO: write parameters value in file
 
     fill(colorRef);
@@ -350,4 +350,3 @@ void drawZigZag(int segments, float radius, float aX, float aY, float bX, float 
 
   endShape();
 }
-
