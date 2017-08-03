@@ -22,7 +22,7 @@ color[] baseColors = new color[colorRef];
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos = 0;
+int fingerPos = fingerSize/2;
 int retrievedPos = 0;
 int[] errors;
 
@@ -72,7 +72,7 @@ void characterization(int fingerPos) {
   }
 
   // is the simulation finished?
-  if (fingerPos >= width) {
+  if (fingerPos >= width - fingerSize/2) {
     // Plot characterization
     drawBackground();
 
