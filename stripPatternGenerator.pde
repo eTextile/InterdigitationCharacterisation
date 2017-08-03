@@ -73,8 +73,6 @@ void characterization(int fingerPos) {
 
   // is the simulation finished?
   if (fingerPos >= width) {
-    isCharacterizing = false;
-
     // Plot characterization
     drawBackground();
 
