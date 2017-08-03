@@ -21,11 +21,16 @@ int globalMax = 0;
 color[] baseColors = new color[colorRef];
 
 int[] pressureIndices = new int[stripNumber];
+boolean isCharacterizing = true;
+int fingerPos = 0;
+int retrievedPos = 0;
+int[] errors;
 
 /////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
   size(600, 330);
+  errors = new int[width];
 
   // run the histogram once to initialize globalMax
   drawBackground();
@@ -42,13 +47,68 @@ void draw() {
 
   // draw transparent finger:
   color c = color(0, 0, colorRef, 2*colorRef/3);
-  drawFinger(mouseX, fingerSize, c);
+  drawFinger(fingerPos, fingerSize, c);
 
   // analyse finger impact on sensor stripes and simulate raw sensor
   PImage data = histograms();
 
   // visualize the estimated finger position using raw sensor data
-  drawRetrievedFinger(data);
+  retrievedPos = drawRetrievedFinger(data);
+
+  if (!isCharacterizing) {
+    fingerPos = mouseX;
+  } else {
+    characterization(fingerPos);
+    fingerPos+=1; // TODO: handle faster steps
+  }
+}
+
+/////////////////////////////////////////////////////////////////
+void characterization(int fingerPos) {
+  // Save characterization data to graph is later
+  if (retrievedPos > 0) {
+      // compute the error:
+      errors[fingerPos] = abs(fingerPos - retrievedPos);
+  }
+
+  // is the simulation finished?
+  if (fingerPos >= width) {
+    isCharacterizing = false;
+
+    // Plot characterization
+    drawBackground();
+
+    stroke(0);
+    strokeWeight(6);
+    for (int i = 1; i < width; i++) {
+      line(i-1, height - errors[i-1],
+           i,   height - errors[i]);
+    }
+
+    String fileName = "characterization.png";
+    saveFrame(fileName); // TODO: write parameters value in file
+
+    fill(colorRef);
+    rect(0,0, width, 80);
+
+    fill(0);
+    textSize(21);
+    text("Graph saved as: " + fileName, 20, 30);
+    text("Press any key = toggle mouse control", 20, 60);
+
+    noLoop();
+  }
+}
+
+/////////////////////////////////////////////////////////////////
+void keyPressed() {
+  if (isCharacterizing) {
+    isCharacterizing = false;
+    loop();
+  } else {
+    isCharacterizing = true;
+    fingerPos = 0;
+  }
 }
 
 /////////////////////////////////////////////////////////////////
