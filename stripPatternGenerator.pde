@@ -10,7 +10,7 @@ int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
-float blobThreshold = 0.6;
+float blobThreshold = 0.4;
 
 // The following global variables should not need to be modified
 
@@ -18,7 +18,6 @@ int stripNumber = 7;
 int colorRef = stripNumber * 10;
 
 int globalMax = 0;
-color[] baseColors = new color[colorRef];
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
@@ -45,9 +44,9 @@ void draw() {
   // draw strips
   drawBackground();
 
-  // draw transparent finger:
-  color c = color(0, 0, colorRef, 2*colorRef/3);
-  drawFinger(fingerPos, fingerSize, c);
+  // draw finger:
+  color white = color(0, 0, colorRef);
+  drawFinger(fingerPos, fingerSize, white);
 
   // analyse finger impact on sensor stripes and simulate raw sensor
   PImage data = histograms();
@@ -122,9 +121,10 @@ PImage histograms() {
   // Calculate the histogram
   for (int i = 0; i < width; i++) {
     for (int j = 0; j < height; j++) {
-      // Only focus on the "finger colors"
-      if ( !isBaseColor( get(i, j) ) ) {
-        int hue = int(hue(get(i, j)));
+      // Only focus on the strips colors (discard white finger & bacground)
+      color c = get(i, j);
+      if (c != color(0, 0, colorRef)) {
+        int hue = int(hue(c));
         rawData[hue]++;
       }
     }
@@ -168,6 +168,8 @@ void preprocess(int[] rawData, PImage niceData) {
   // Extract pressure sensor data, normalize, and interpolate (using image functions):
   niceData.loadPixels();
   for (int i = 0; i < stripNumber; i++) {
+    // count how many pixels are hidden by the finger
+    rawData[pressureIndices[i]] = globalMax - rawData[pressureIndices[i]];
     // populate the 1 dimensional image with normalized value
     int level = colorRef * rawData[pressureIndices[i]] / globalMax;
     niceData.pixels[i] = color(level);
@@ -250,24 +252,6 @@ int drawRetrievedFinger(PImage niceData) {
 }
 
 /////////////////////////////////////////////////////////////////
-boolean isBaseColor(color c) {
-  // This function looks for the most common colors, those that
-  // we don't want to see in our histogram.
-
-  // 1st, test white:
-  if (c == color(0, 0, colorRef)) {
-    return true;
-  }
-
-  // then test the strip colors:
-  for (int i = 0; i < baseColors.length; i++)
-    if (c == baseColors[i])
-      return true;
-
-  return false;
-}
-
-/////////////////////////////////////////////////////////////////
 void drawFinger(int position, int size, color c) {
   // This functions assumes that the pressure applied by a finger
   // is similar to a disc, later it will use a different model
@@ -296,11 +280,10 @@ void drawBackground() {
   for (int i = 0; i<stripNumber; i++) {
     strokeWeight(zzStrokeWidth);
 
-    // Hue, Saturation, Brightness, Alpha
-    baseColors[i] = color(i*(colorRef/stripNumber) % colorRef,
-                          colorRef, colorRef, colorRef);
+    // Hue, Saturation, Brightness
+    int hue = i*(colorRef/stripNumber) % colorRef;
+    stroke(color(hue, colorRef, colorRef));
 
-    stroke(baseColors[i]);
     drawZigZag(zzSpikeCount, zzTotalWidth,
                startPosX + zzTotalWidth * i * zzSpacingFactor, startPosY,
                endPosX   + zzTotalWidth * i * zzSpacingFactor,   endPosY);
