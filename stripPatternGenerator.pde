@@ -1,7 +1,7 @@
 // This program draws virtual pressure sensing strips with interdigitated
 // shapes (zigzags for now), and a virtual finger that swipes it.
 // To identify each strip, it uses different colors, and to simulate the
-// effect of a finger on it, an alpha value is used.
+// effect of a finger on it, we just count how many pixels it hides.
 import blobDetection.*;
 
 int zzSpikeCount = 5;          // zig-zag count
@@ -10,7 +10,7 @@ int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
-float blobThreshold = 0.4;
+float blobThreshold = 0.15;
 
 // The following global variables should not need to be modified
 
@@ -83,7 +83,7 @@ void characterization(int fingerPos) {
     }
 
     // draw finger in the middle as reference:
-    color c = color(0, 0, colorRef, 2*colorRef/3);
+    color c = color(0, 0, colorRef, colorRef);
     drawFinger(width/2, fingerSize, c);
 
     String fileName = "characterization_count" + zzSpikeCount +"_width_" + zzTotalWidth + ".png";
@@ -253,12 +253,16 @@ int drawRetrievedFinger(PImage niceData) {
 
 /////////////////////////////////////////////////////////////////
 void drawFinger(int position, int size, color c) {
-  // This functions assumes that the pressure applied by a finger
-  // is similar to a disc, later it will use a different model
-  // such as half a sphere, flattened or not.
-  strokeWeight(0);
-  fill(c);
-  ellipse(position, height/2, size, size);
+  // Use concentric thick circles with more pixels hidden in the
+  // center in order to represent better a finger pressure
+  noFill();
+  stroke(c);
+  int circleStep = 15;
+  for (int i = 1; i < size; i+= size/circleStep) {
+    // TODO: test logarithmic approach
+    strokeWeight((size - i) / (1.2*circleStep));
+    ellipse(position, height/2, i, i);
+  }
 }
 
 /////////////////////////////////////////////////////////////////
