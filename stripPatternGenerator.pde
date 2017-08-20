@@ -21,7 +21,7 @@ int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos = fingerSize/2;
+int fingerPos = fingerSize;
 int retrievedPos = 0;
 int[] errors;
 
@@ -71,7 +71,7 @@ void characterization(int fingerPos) {
   }
 
   // is the simulation finished?
-  if (fingerPos >= width - fingerSize/2) {
+  if (fingerPos >= width - fingerSize) {
     // Plot characterization
     drawBackground();
 
@@ -230,9 +230,21 @@ int drawRetrievedFinger(PImage niceData) {
       niceData.pixels[i + 2*niceData.width] = 0; // 3rd line
   }
 
+  // find maximum value in the interpolated data
+  float localMax = 0;
+  for (int i = niceData.width; i< 2*niceData.width; i++) {
+    localMax = max(localMax, brightness(niceData.pixels[i]));
+  }
+  // TODO: scan for the max in the setup to avoid this arbitrary numerator
+  float thresholdZoom = (globalMax/(colorRef*stripNumber*3)) / localMax;
+
+  int thresholdLineHeight = int(height * (1 - blobThreshold * thresholdZoom));
+  line(0,     thresholdLineHeight,
+       width, thresholdLineHeight);
+
   BlobDetection blobDetect;
   blobDetect = new BlobDetection(niceData.width, niceData.height);
-  blobDetect.setThreshold(blobThreshold);
+  blobDetect.setThreshold(blobThreshold * thresholdZoom);
   blobDetect.setPosDiscrimination(false);
   blobDetect.computeBlobs(niceData.pixels);
 
