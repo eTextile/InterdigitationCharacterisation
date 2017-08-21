@@ -2,7 +2,6 @@
 // shapes (zigzags for now), and a virtual finger that swipes it.
 // To identify each strip, it uses different colors, and to simulate the
 // effect of a finger on it, we just count how many pixels it hides.
-import blobDetection.*;
 
 int zzSpikeCount = 5;          // zig-zag count
 int zzTotalWidth = 35;         // zig-zag width
@@ -10,7 +9,6 @@ int zzStrokeWidth = 45;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
 int fingerSize = 5 * zzTotalWidth;
-float blobThreshold = 0.15;
 
 // The following global variables should not need to be modified
 
@@ -21,7 +19,7 @@ int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos = fingerSize;
+int fingerPos = fingerSize/2;
 int retrievedPos = 0;
 int[] errors;
 
@@ -36,7 +34,7 @@ void setup() {
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);   // finger color
   rect(0, 0, width, fingerSize);        // simulate a wide finger
-  histograms();
+  histogram();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -49,10 +47,10 @@ void draw() {
   drawFinger(fingerPos, fingerSize, white);
 
   // analyse finger impact on sensor stripes and simulate raw sensor
-  PImage data = histograms();
+  int[] niceData = histogram();
 
   // visualize the estimated finger position using raw sensor data
-  retrievedPos = drawRetrievedFinger(data);
+  retrievedPos = drawRetrievedFinger(niceData);
 
   if (!isCharacterizing) {
     fingerPos = mouseX;
@@ -71,7 +69,7 @@ void characterization(int fingerPos) {
   }
 
   // is the simulation finished?
-  if (fingerPos >= width - fingerSize) {
+  if (fingerPos >= width - fingerSize/2) {
     // Plot characterization
     drawBackground();
 
@@ -113,7 +111,7 @@ void keyPressed() {
 }
 
 /////////////////////////////////////////////////////////////////
-PImage histograms() {
+int[] histogram() {
   // This function measures the effect of a finger on a strip.
   // It counts the pixels with a color that changed.
 
@@ -130,21 +128,20 @@ PImage histograms() {
     }
   }
 
-  // Create an array only for the simulated pressure sensor data
-  PImage niceData = createImage(stripNumber, 1, ALPHA);
+  // Extract from histogram and normalize
+  int[] niceData = preprocess(rawData);
 
-  // Extract from histogram, normalize, and interpolate
-  preprocess(rawData, niceData);
-
-  // Visualizations
-  classicHistogram(rawData);       // simulated raw sensor data
-  interpolatedHistogram(niceData); // increased resolution
+  // Visualization
+  drawHistogram(niceData); // simulated raw sensor data
 
   return niceData;
 }
 
 /////////////////////////////////////////////////////////////////
-void preprocess(int[] rawData, PImage niceData) {
+int[] preprocess(int[] rawData) {
+  // Create an array only for the simulated pressure sensor data
+  int[] niceData = new int[stripNumber];
+
   // Find the largest value in the histogram
   int histMax = max(rawData);
   globalMax = max(histMax, globalMax);
@@ -165,102 +162,78 @@ void preprocess(int[] rawData, PImage niceData) {
     }
   }
 
-  // Extract pressure sensor data, normalize, and interpolate (using image functions):
-  niceData.loadPixels();
+  // Extract pressure sensor data and normalize:
   for (int i = 0; i < stripNumber; i++) {
     // count how many pixels are hidden by the finger
     rawData[pressureIndices[i]] = globalMax - rawData[pressureIndices[i]];
-    // populate the 1 dimensional image with normalized value
-    int level = colorRef * rawData[pressureIndices[i]] / globalMax;
-    niceData.pixels[i] = color(level);
-  }
-  niceData.updatePixels();
 
-  niceData.resize(colorRef, 1); // interpolation
+    // populate the array with normalized value
+    niceData[i] = colorRef * rawData[pressureIndices[i]] / globalMax;
+  }
+  return niceData;
 }
 
 /////////////////////////////////////////////////////////////////
-void classicHistogram(int[] rawData) {
+void drawHistogram(int[] niceData) {
   // Draw the histogram
-  for (int i = 0; i < width; i++) {
-    // Map i (from 0..width) to a location in the histogram (0..colorRef)
-    int which = int(map(i, 0, width, 0, colorRef));
+  for (int i = 0; i < niceData.length; i++) {
+
+    // Compute where lines should be traced
+    int x = int(map(i, 0,niceData.length+0.8,    // TODO generic
+                       0,width));
+    // shift to allign with stripe
+    x += 0.75 * width / niceData.length;         // TODO generic
 
     // Convert the histogram value to a location between
     // the bottom and the top of the picture
-    int y = int(map(rawData[which],
-                    0, globalMax,
+    int y = int(map(niceData[i],
+                    0, colorRef,
                     height, 0));
+    //y *= globalMax/XXX; // TODO adapt!
+
     stroke(0);
     strokeWeight(5);
-    line(i, height, i, y);
+    line(x,height, x,y);
   }
-
 }
 
 /////////////////////////////////////////////////////////////////
-void interpolatedHistogram(PImage niceData) {
-  niceData.loadPixels();
-  // Draw the interpolated histogram
-  for (int i = 0; i < width; i+=8) {
-    // Map i (from 0..width) to a location in the histogram (0..colorRef)
-    int which = int(map(i, 0, width, 0, niceData.pixels.length));
-
-    // Convert the histogram value to a location between
-    // the bottom and the top of the picture
-    int y = int(map(brightness(niceData.pixels[which]), 0, colorRef, height, 0));
-    stroke(0);
-    strokeWeight(2);
-    line(i, height, i, y);
-  }
-  niceData.updatePixels();
-}
-
-/////////////////////////////////////////////////////////////////
-int drawRetrievedFinger(PImage niceData) {
+int drawRetrievedFinger(int[] niceData) {
   // This function aims to retrieve finger position
 
-  int retrievedPos = -1;
-  niceData.resize(colorRef, 3); // interpolation
-  niceData.loadPixels();
+  float retrievedPos = -1;
 
-  // The blob detection needs different lines around the real data
-  for (int i = 0; i < niceData.width; i++) {
-      niceData.pixels[i] = 0;                    // 1st line
-      niceData.pixels[i + 2*niceData.width] = 0; // 3rd line
-  }
-
-  // find maximum value in the interpolated data
-  float localMax = 0;
-  for (int i = niceData.width; i< 2*niceData.width; i++) {
-    localMax = max(localMax, brightness(niceData.pixels[i]));
-  }
-  // TODO: scan for the max in the setup to avoid this arbitrary numerator
-  float thresholdZoom = (globalMax/(colorRef*stripNumber*3)) / localMax;
-
-  int thresholdLineHeight = int(height * (1 - blobThreshold * thresholdZoom));
-  line(0,     thresholdLineHeight,
-       width, thresholdLineHeight);
-
-  BlobDetection blobDetect;
-  blobDetect = new BlobDetection(niceData.width, niceData.height);
-  blobDetect.setThreshold(blobThreshold * thresholdZoom);
-  blobDetect.setPosDiscrimination(false);
-  blobDetect.computeBlobs(niceData.pixels);
-
-  niceData.updatePixels();
-
-  if (blobDetect.getBlobNb() > 0) {
-    Blob b = blobDetect.getBlob(0); // there should only be one
-    if (b != null) {
-      // Draw finger at estimated position
-      retrievedPos = int(b.x * width);
-      color c = color(0, 0, 0, 2*colorRef/3);
-      drawFinger(retrievedPos, fingerSize*4/5, c);
+  // Find max index
+  int maxArray = max(niceData);
+  int maxIndex = 0;
+  for (int i = 0; i < niceData.length; i++) {
+    if (maxArray == niceData[i]) {
+      maxIndex = i;
+      break;
     }
   }
 
-  return retrievedPos;
+  // Retrieval method from Microchip TB3064 white paper (p12):
+  // microchip.com/stellent/groups/techpub_sg/documents/devicedoc/en550192.pdf
+  // Position is calculated as the centroid of 2 adjacent values:
+
+  int prev = (maxIndex==0)?
+             0 : niceData[maxIndex-1];
+
+  int next = (maxIndex>=niceData.length-1)?
+             0 : niceData[maxIndex+1];
+
+  retrievedPos = maxIndex + 0.5 * (next - prev) / niceData[maxIndex];
+
+  // Offset TODO?
+  retrievedPos += 0.5;
+  retrievedPos *= width / stripNumber;
+
+  // Draw finger at estimated position
+  color c = color(0, 0, 0, 2*colorRef/3);
+  drawFinger(int(retrievedPos), fingerSize*4/5, c);
+
+  return int(retrievedPos);
 }
 
 /////////////////////////////////////////////////////////////////
