@@ -238,16 +238,11 @@ int drawRetrievedFinger(int[] niceData) {
 
 /////////////////////////////////////////////////////////////////
 void drawFinger(int position, int size, color c) {
-  // Use concentric thick circles with more pixels hidden in the
-  // center in order to represent better a finger pressure
-  noFill();
-  stroke(c);
-  int circleStep = 15;
-  for (int i = 1; i < size; i+= size/circleStep) {
-    // TODO: test logarithmic approach
-    strokeWeight((size - i) / (1.2*circleStep));
-    ellipse(position, height/2, i, i);
-  }
+  // This functions assumes that the pressure applied by a finger
+  // is similar to a disc
+  strokeWeight(0);
+  fill(c);
+  ellipse(position, height/2, size, size);
 }
 
 /////////////////////////////////////////////////////////////////
