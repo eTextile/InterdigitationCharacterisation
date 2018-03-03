@@ -3,12 +3,12 @@
 // To identify each strip, it uses different colors, and to simulate the
 // effect of a finger on it, we just count how many pixels it hides.
 
-int zzSpikeCount = 5;          // zig-zag count
+int zzSpikeCount = 6;          // zig-zag count
 int zzTotalWidth = 35;         // zig-zag width
-int zzStrokeWidth = 45;        // zig-zag stroke width
+int zzStrokeWidth = 40;        // zig-zag stroke width
 float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
 
-int fingerSize = 5 * zzTotalWidth;
+int fingerSize = 4 * zzTotalWidth;
 
 // The following global variables should not need to be modified
 
@@ -19,14 +19,14 @@ int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos = fingerSize/2;
+int fingerPos = fingerSize;
 int retrievedPos = 0;
 int[] errors;
 
 /////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
-  size(600, 330);
+  size(600, 250);
   errors = new int[width];
 
   // run the histogram once to initialize globalMax
@@ -56,7 +56,7 @@ void draw() {
     fingerPos = mouseX;
   } else {
     characterization(fingerPos);
-    fingerPos+=1; // TODO: handle faster steps
+    fingerPos+=10; // TODO: handle faster steps
   }
 }
 
@@ -69,11 +69,12 @@ void characterization(int fingerPos) {
   }
 
   // is the simulation finished?
-  if (fingerPos >= width - fingerSize/2) {
+  if (fingerPos >= width - fingerSize) {
     // Plot characterization
     drawBackground();
 
     stroke(0);
+    strokeCap(SQUARE);
     strokeWeight(6);
     for (int i = 1; i < width; i++) {
       line(i-1, height - errors[i-1],
@@ -81,7 +82,7 @@ void characterization(int fingerPos) {
     }
 
     // draw finger in the middle as reference:
-    color c = color(0, 0, colorRef, colorRef);
+    color c = color(0, 0, colorRef, 2*colorRef/3);
     drawFinger(width/2, fingerSize, c);
 
     String fileName = "characterization_count" + zzSpikeCount +"_width_" + zzTotalWidth + ".png";
@@ -240,7 +241,7 @@ int drawRetrievedFinger(int[] niceData) {
 void drawFinger(int position, int size, color c) {
   // This functions assumes that the pressure applied by a finger
   // is similar to a disc
-  strokeWeight(0);
+  noStroke();
   fill(c);
   ellipse(position, height/2, size, size);
 }
