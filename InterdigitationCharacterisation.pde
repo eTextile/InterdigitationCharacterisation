@@ -3,15 +3,17 @@
 // To identify each strip, it uses different colors, and to simulate the
 // effect of a finger on it, we just count how many pixels it hides.
 
-int zzSpikeCount = 6;          // zig-zag count
-int zzTotalWidth = 35;         // zig-zag width
-int zzStrokeWidth = 40;        // zig-zag stroke width
-float zzSpacingFactor = 2.2;   // zig-zag spacing factor between strips
+int zzSpikeCount = 1;           // zig-zag count
+float zzSpacingRatio = 0.1;     // space between strips
+float fingerRatio = 1.2;        // unit = distance between 2 strip centers
 
-int fingerSize = 4 * zzTotalWidth;
+// The following global variables (in pixels) are calculated in setup()
+int zzUnitWidth;                // stripe + spacing width
+int zzStrokeWidth;              // stripe width - depends on screen size
+int zzSpacingWidth;
+int fingerWidth;
 
 // The following global variables should not need to be modified
-
 int stripNumber = 7;
 int colorRef = stripNumber * 10;
 
@@ -19,7 +21,7 @@ int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos = fingerSize;
+int fingerPos;
 int retrievedPos = 0;
 int[] errors;
 
@@ -27,13 +29,23 @@ int[] errors;
 void setup() {
   colorMode(HSB, colorRef);
   size(600, 250);
+
+  zzUnitWidth = Math.round(width / stripNumber);
+  zzSpacingWidth = Math.round(zzUnitWidth * zzSpacingRatio);
+  zzStrokeWidth = zzUnitWidth - zzSpacingWidth;
+
+  // TODO: use trigonometry to calculate zzStrokeWidth well!!!
+
+  fingerWidth = Math.round(fingerRatio * zzStrokeWidth);
+  fingerPos = fingerWidth;
+
   errors = new int[width];
 
   // run the histogram once to initialize globalMax
   drawBackground();
   strokeWeight(0);
   fill(0, 0, colorRef, 2*colorRef/3);   // finger color
-  rect(0, 0, width, fingerSize);        // simulate a wide finger
+  rect(0, 0, width, fingerWidth);        // simulate a wide finger
   histogram();
 }
 
@@ -44,7 +56,7 @@ void draw() {
 
   // draw finger:
   color white = color(0, 0, colorRef);
-  drawFinger(fingerPos, fingerSize, white);
+  drawFinger(fingerPos, fingerWidth, white);
 
   // analyse finger impact on sensor stripes and simulate raw sensor
   int[] niceData = histogram();
@@ -69,7 +81,7 @@ void characterization(int fingerPos) {
   }
 
   // is the simulation finished?
-  if (fingerPos >= width - fingerSize) {
+  if (fingerPos >= width - fingerWidth) {
     // Plot characterization
     drawBackground();
 
@@ -83,9 +95,10 @@ void characterization(int fingerPos) {
 
     // draw finger in the middle as reference:
     color c = color(0, 0, colorRef, 2*colorRef/3);
-    drawFinger(width/2, fingerSize, c);
+    drawFinger(width/2, fingerWidth, c);
 
-    String fileName = "characterization_count" + zzSpikeCount +"_width_" + zzTotalWidth + ".png";
+    String fileName = "characterization_count" + zzSpikeCount +
+                      "_spacingRatio_" + zzSpacingRatio + ".png";
     saveFrame(fileName); // TODO: write parameters value in file
 
     fill(colorRef);
@@ -232,7 +245,7 @@ int drawRetrievedFinger(int[] niceData) {
 
   // Draw finger at estimated position
   color c = color(0, 0, 0, 2*colorRef/3);
-  drawFinger(int(retrievedPos), fingerSize*4/5, c);
+  drawFinger(int(retrievedPos), fingerWidth*4/5, c);
 
   return int(retrievedPos);
 }
@@ -252,12 +265,12 @@ void drawBackground() {
   // shape but a picture could be loaded with random shapes
 
   // starting point
-  int startPosX = zzTotalWidth*2;
-  int startPosY = -zzTotalWidth;
+  int startPosX =  Math.round((zzStrokeWidth + zzSpacingRatio) / 2);
+  int startPosY = -zzStrokeWidth / 2;
 
   // end point of the line
-  int endPosX = zzTotalWidth*2;
-  int endPosY = height+zzTotalWidth;
+  int endPosX = startPosX;
+  int endPosY = height-startPosY;
 
   background(colorRef);
   strokeJoin(MITER);
@@ -269,14 +282,22 @@ void drawBackground() {
     int hue = i*(colorRef/stripNumber) % colorRef;
     stroke(color(hue, colorRef, colorRef));
 
-    drawZigZag(zzSpikeCount, zzTotalWidth,
-               startPosX + zzTotalWidth * i * zzSpacingFactor, startPosY,
-               endPosX   + zzTotalWidth * i * zzSpacingFactor,   endPosY);
+    drawZigZag(zzSpikeCount, zzStrokeWidth,
+               startPosX + zzUnitWidth * i, startPosY,
+               endPosX   + zzUnitWidth * i,   endPosY);
   }
 }
 
 /////////////////////////////////////////////////////////////////
 void drawZigZag(int segments, float radius, float aX, float aY, float bX, float bY) {
+
+  if (segments <= 1) {
+    beginShape();
+    vertex(aX, aY);
+    vertex(bX, bY);
+    endShape();
+    return;
+  }
 
   // Calculate vector from start to end point
   float distX = bX - aX;
