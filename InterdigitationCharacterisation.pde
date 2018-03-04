@@ -5,7 +5,7 @@
 
 int zzSpikeCount = 1;           // zig-zag count
 float zzSpacingRatio = 0.1;     // space between strips
-float fingerRatio = 1.2;        // unit = distance between 2 strip centers
+float fingerRatio = 1.25;        // unit = distance between 2 strip centers
 
 // The following global variables (in pixels) are calculated in setup()
 int zzUnitWidth;                // stripe + spacing width
@@ -15,26 +15,35 @@ int fingerWidth;
 
 // The following global variables should not need to be modified
 int stripNumber = 7;
-int colorRef = stripNumber * 10;
+int interStep = 10;
+int colorRef = stripNumber * interStep;
 
 int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-int fingerPos;
+float fingerPos, originalFingerPos, finalFingerPos;
+float measureStep;
 int retrievedPos = 0;
 int[] errors;
 
 /////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
-  size(600, 250);
+  size(1900, 250);
 
   zzUnitWidth = Math.round(width / stripNumber);
   zzSpacingWidth = Math.round(zzUnitWidth * zzSpacingRatio);
   zzStrokeWidth = zzUnitWidth - zzSpacingWidth;
 
   // TODO: use trigonometry to calculate zzStrokeWidth well!!!
+
+  // We want 71 data points across 3.5 stripes:
+  originalFingerPos = 2 * zzUnitWidth;
+  finalFingerPos = (3.5 + originalFingerPos);
+  measureStep = ((finalFingerPos - originalFingerPos) / 71);
+  println("measureStep");
+  println(measureStep);
 
   fingerWidth = Math.round(fingerRatio * zzStrokeWidth);
   fingerPos = fingerWidth;
@@ -62,13 +71,13 @@ void draw() {
   int[] niceData = histogram();
 
   // visualize the estimated finger position using raw sensor data
-  retrievedPos = drawRetrievedFinger(niceData);
+  retrievedPos = drawCubicRetrievedFinger(niceData);
 
   if (!isCharacterizing) {
     fingerPos = mouseX;
   } else {
     characterization(fingerPos);
-    fingerPos+=10; // TODO: handle faster steps
+    fingerPos += measureStep;
   }
 }
 
@@ -97,15 +106,15 @@ void characterization(int fingerPos) {
     color c = color(0, 0, colorRef, 2*colorRef/3);
     drawFinger(width/2, fingerWidth, c);
 
-    String fileName = "characterization_count" + zzSpikeCount +
-                      "_spacingRatio_" + zzSpacingRatio + ".png";
+    String fileName = "charact_count" + zzSpikeCount +
+                      "_spacing" + zzSpacingRatio*100 + "percent.png";
     saveFrame(fileName); // TODO: write parameters value in file
 
     fill(colorRef);
     rect(0,0, width, 80);
 
     fill(0);
-    textSize(21);
+    textSize(18);
     text("Graph saved as: " + fileName, 20, 30);
     text("Press any key = toggle mouse control", 20, 60);
 
@@ -248,6 +257,80 @@ int drawRetrievedFinger(int[] niceData) {
   drawFinger(int(retrievedPos), fingerWidth*4/5, c);
 
   return int(retrievedPos);
+}
+
+/////////////////////////////////////////////////////////////////
+int drawCubicRetrievedFinger(int[] niceData) {
+  // This function aims to retrieve finger position
+
+  int interFactor = interStep*2; // improves error smoothness
+  float retrievedPos = -1;
+  float[] y = new float[stripNumber*interFactor];
+
+  float scaling = float(width) / y.length;
+  strokeWeight(3);
+
+  // interpolate
+  for (int s = 0; s < stripNumber; s++) { // sensor strips
+    // avoid overflows
+    int s0 = (s-1 < 0)? -1 : s-1;
+    int s1 = s;
+    int s2 = (s+1 >= stripNumber)? s : s+1;
+    int s3 = (s+2 >= stripNumber)? s : s+2;
+
+    for (int i = 0; i < interFactor; i++) { // interpolation steps
+      y[i+s*interFactor] = CubicInterpolate(s0<0? 0 : niceData[s0],
+                                            niceData[s1],
+                                            niceData[s2],
+                                            niceData[s3],
+                                            float(i)/interFactor);
+    }
+  }
+
+  // Find max index
+  float maxArray = max(y);
+
+  for (int i = 0; i < y.length; i++) {
+    if (maxArray == y[i]) {
+      retrievedPos = i;
+      break;
+    }
+  }
+
+  retrievedPos *= scaling; // normalize to display
+  retrievedPos += zzUnitWidth/2;
+
+  // Draw finger at estimated position
+  color c = color(0, 0, 0, 2*colorRef/3);
+  drawFinger(int(retrievedPos), fingerWidth*4/5, c);
+
+  return int(retrievedPos);
+}
+
+/////////////////////////////////////////////////////////////////
+float CubicInterpolate(float y0, float y1,
+                       float y2, float y3, float mu) {
+  /* @article{bourke1999interpolation,
+         title={Interpolation methods},
+         author={Bourke, Paul},
+         journal={paulbourke.net/miscellaneous/interpolation},
+         year={1999} } */
+
+  float a0, a1, a2, a3, mu2;
+  mu2 = mu*mu;
+
+  // Breeuwsma approach:
+  a0 = -0.5*y0 + 1.5*y1 - 1.5*y2 + 0.5*y3;
+  a1 = y0 - 2.5*y1 + 2*y2 - 0.5*y3;
+  a2 = -0.5*y0 + 0.5*y2;
+  a3 = y1;
+
+  return (a0*mu*mu2 + a1*mu2 + a2*mu + a3);
+}
+
+/////////////////////////////////////////////////////////////////
+float LinearInterpolate(float y1, float y2, float mu) {
+  return(y1*(1-mu)+y2*mu);
 }
 
 /////////////////////////////////////////////////////////////////
