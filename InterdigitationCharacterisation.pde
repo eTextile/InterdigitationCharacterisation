@@ -22,33 +22,35 @@ int globalMax = 0;
 
 int[] pressureIndices = new int[stripNumber];
 boolean isCharacterizing = true;
-float fingerPos, originalFingerPos, finalFingerPos;
-float measureStep;
+int fingerPos, originalFingerPos, finalFingerPos;
+int measureStep;
 int retrievedPos = 0;
 int[] errors;
+int[] retrievedPositions;
 
 /////////////////////////////////////////////////////////////////
 void setup() {
   colorMode(HSB, colorRef);
-  size(1900, 250);
+  size(600, 250);
 
   zzUnitWidth = Math.round(width / stripNumber);
   zzSpacingWidth = Math.round(zzUnitWidth * zzSpacingRatio);
   zzStrokeWidth = zzUnitWidth - zzSpacingWidth;
 
-  // TODO: use trigonometry to calculate zzStrokeWidth well!!!
+  // TODO: USE FLOATS!!
 
   // We want 71 data points across 3.5 stripes:
-  originalFingerPos = 2 * zzUnitWidth;
-  finalFingerPos = (3.5 + originalFingerPos);
-  measureStep = ((finalFingerPos - originalFingerPos) / 71);
-  println("measureStep");
-  println(measureStep);
+  originalFingerPos = Math.round(1.75 * zzUnitWidth); // 1.75 to center the measures
+  finalFingerPos    = Math.round(3.5  * zzUnitWidth + originalFingerPos);
+  measureStep       = Math.round((finalFingerPos - originalFingerPos) / 71);
 
   fingerWidth = Math.round(fingerRatio * zzStrokeWidth);
-  fingerPos = fingerWidth;
+  fingerPos = originalFingerPos;
 
   errors = new int[width];
+  retrievedPositions = new int[width];
+  println("Partial characterization of line strip:");
+  println("normalized real position, normalized retrieved position");
 
   // run the histogram once to initialize globalMax
   drawBackground();
@@ -87,19 +89,26 @@ void characterization(int fingerPos) {
   if (retrievedPos > 0) {
       // compute the error:
       errors[fingerPos] = abs(fingerPos - retrievedPos);
+      retrievedPositions[fingerPos] = retrievedPos;
   }
 
   // is the simulation finished?
-  if (fingerPos >= width - fingerWidth) {
+  if (fingerPos >= finalFingerPos) {
     // Plot characterization
     drawBackground();
 
+    int count = 0;
     stroke(0);
-    strokeCap(SQUARE);
     strokeWeight(6);
-    for (int i = 1; i < width; i++) {
-      line(i-1, height - errors[i-1],
+    for (int i = measureStep; i < width; i++) {
+      line(i-1, height - errors[i-measureStep],
            i,   height - errors[i]);
+
+      if (retrievedPositions[i] > 0 && count++ < 71) {
+        float normalizedPos = float(i)/width;
+        float normalizedRetrivedPos = float(retrievedPositions[i])/width;
+        println(normalizedPos, ", ", normalizedRetrivedPos);
+      }
     }
 
     // draw finger in the middle as reference:
